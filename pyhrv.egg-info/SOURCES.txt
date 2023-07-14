@@ -1,0 +1,11 @@
+setup.py
+pyhrv/DataIntoERP.py
+pyhrv/Main.py
+pyhrv/OdsToStd.py
+pyhrv/SrcToOds.py
+pyhrv/__init__.py
+pyhrv.egg-info/PKG-INFO
+pyhrv.egg-info/SOURCES.txt
+pyhrv.egg-info/dependency_links.txt
+pyhrv.egg-info/requires.txt
+pyhrv.egg-info/top_level.txt
