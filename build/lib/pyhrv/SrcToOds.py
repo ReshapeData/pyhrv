@@ -72,6 +72,7 @@ insert into   rds_hrv_ods_ds_salary
       ,[FSeq]
       ,[FDate]
       ,[FOldDept]
+      ,FNotePeriod
   FROM rds_hrv_src_ds_salary  A
   where  A.FNumber  NOT  IN 
    (SELECT FNumber FROM rds_hrv_ods_ds_salary)
@@ -114,6 +115,7 @@ insert into rds_hrv_ods_ds_socialsecurity
       ,[FSeq]
       ,[FDate]
       ,[FOldDept]
+      ,FNotePeriod
   FROM rds_hrv_src_ds_socialsecurity   A
   where  A.FNumber  NOT  IN 
    (SELECT FNumber FROM rds_hrv_ods_ds_socialsecurity)

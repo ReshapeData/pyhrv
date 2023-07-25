@@ -8,6 +8,7 @@ from . import OdsToStd
 from . import SrcToOds
 from . import DataIntoERP
 
+
 def voucher_query(app, FNumber):
     '''
     凭证模板表与科目表结合
@@ -50,10 +51,10 @@ def tableName_query(app, FCategory):
     res = app.select(sql)
 
     if res:
-
         return res[0]["FTableName"]
 
-def category_query(app,FNumber):
+
+def category_query(app, FNumber):
     '''
     单据类型查询
     :param app:
@@ -61,13 +62,14 @@ def category_query(app,FNumber):
     :return:
     '''
 
-    sql=f"select FCategoryType from rds_hrv_ods_ds_documentNumber where FNumber='{FNumber}'"
+    sql = f"select FCategoryType from rds_hrv_ods_ds_documentNumber where FNumber='{FNumber}'"
 
-    res=app.select(sql)
+    res = app.select(sql)
 
     return res
 
-def categorySecond_query(app,FYear,FMonth):
+
+def categorySecond_query(app, FYear, FMonth):
     '''
     单据类型查询
     :param app:
@@ -75,14 +77,11 @@ def categorySecond_query(app,FYear,FMonth):
     :return:
     '''
 
-    sql=f"select FCategoryType,FNumber from rds_hrv_ods_ds_documentNumber where FYear='{FYear}' and FMonth='{FMonth}'"
+    sql = f"select FCategoryType,FNumber from rds_hrv_ods_ds_documentNumber where FYear='{FYear}' and FMonth='{FMonth}'"
 
-    res=app.select(sql)
+    res = app.select(sql)
 
     return res
-
-
-
 
 
 def datasource_query(app, FTableName, FNumber):
@@ -233,7 +232,7 @@ def voucherRule_query(app, FExpenseOrgID, FTaxDeclarationOrg, FBankType, FCatego
 
 
 def permutation(oldList):
-    s = pd.Series(["部门", "责任中心", "重分类", "研发项目","银行账号","往来单位","供应商"])
+    s = pd.Series(["部门", "责任中心", "重分类", "研发项目", "银行账号", "往来单位", "供应商"])
 
     res = s.isin(oldList).to_frame()
 
@@ -257,40 +256,38 @@ def fetchNumber_byFAcct(df, acct, borrowLoanSql):
     # "FSeqNew"
 
     datadf = df[df["FAccount"] == acct][
-        ["FNumber", "FExpenseOrgID", "FTaxDeclarationOrg", "FHightechDept", "FRdProject", "FYear", "FMonth","FDate","FOldDept", borrowLoanSql.strip()]]
+        ["FNumber", "FExpenseOrgID", "FTaxDeclarationOrg", "FHightechDept", "FRdProject", "FYear", "FMonth", "FDate",
+         "FOldDept","FNotePeriod", borrowLoanSql.strip()]]
 
     return datadf
 
 
 def deptOldName_query(app2):
+    sql = "select * from rds_hrv_ods_md_deptcomparison"
 
-    sql="select * from rds_hrv_ods_md_deptcomparison"
+    res = app2.select(sql)
 
-    res=app2.select(sql)
-
-    df=pd.DataFrame(res)
+    df = pd.DataFrame(res)
 
     return df
 
 
-
-def deptName_repalce(deptOldName,FName):
+def deptName_repalce(deptOldName, FName):
     '''
     部门名字替换
     :param FName:
     :return:
     '''
 
-    oldname=FName
+    oldname = FName
 
-    if deptOldName[deptOldName["FDept"]==FName].empty!=True:
-
-        oldname = deptOldName[deptOldName["FDept"]==FName]["FOldDept"].tolist()[-1]
+    if deptOldName[deptOldName["FDept"] == FName].empty != True:
+        oldname = deptOldName[deptOldName["FDept"] == FName]["FOldDept"].tolist()[-1]
 
     return oldname
 
 
-def dept_replace(df, deptdf,deptOldName):
+def dept_replace(df, deptdf, deptOldName):
     '''
     部门替换
     :param df:
@@ -302,10 +299,9 @@ def dept_replace(df, deptdf,deptOldName):
 
         deptName = df.loc[i]["FHightechDept"]
 
-        FNewName=deptName_repalce(deptOldName,deptName)
+        FNewName = deptName_repalce(deptOldName, deptName)
 
-        if deptdf[deptdf["FDepName"] == FNewName].empty!=True:
-
+        if deptdf[deptdf["FDepName"] == FNewName].empty != True:
             deptNumber = (deptdf[deptdf["FDepName"] == FNewName]).iloc[0]["FNumber"]
 
             df.loc[df[df["FHightechDept"] == deptName].index.tolist(), "FDeptNumber"] = deptNumber
@@ -324,8 +320,7 @@ def acctreclass_replace(df, voucherTpldf, acctreclassdf):
 
     FAccountName = voucherTpldf.iloc[19]
 
-    if acctreclassdf[acctreclassdf["FAccountItem"] == FAccountName].empty!=True:
-
+    if acctreclassdf[acctreclassdf["FAccountItem"] == FAccountName].empty != True:
         acctreclass = (acctreclassdf[acctreclassdf["FAccountItem"] == FAccountName]).iloc[0]["FNumber"]
 
         df.loc[df.index.tolist(), "FAcctreClassNumber"] = acctreclass
@@ -335,7 +330,7 @@ def acctreclass_replace(df, voucherTpldf, acctreclassdf):
     return df
 
 
-def workcenter_repalce(df, workcenterdf,deptOldName):
+def workcenter_repalce(df, workcenterdf, deptOldName):
     '''
     责任中心替换
     :param df:
@@ -346,10 +341,10 @@ def workcenter_repalce(df, workcenterdf,deptOldName):
 
         deptName = df.loc[i]["FHightechDept"]
 
+        if workcenterdf[workcenterdf["FDept"] == deptName_repalce(deptOldName, deptName)].empty != True:
 
-        if workcenterdf[workcenterdf["FDept"] == deptName_repalce(deptOldName,deptName)].empty!=True:
-
-            deptNumber = (workcenterdf[workcenterdf["FDept"] == deptName_repalce(deptOldName,deptName)]).iloc[0]["FNumber"]
+            deptNumber = (workcenterdf[workcenterdf["FDept"] == deptName_repalce(deptOldName, deptName)]).iloc[0][
+                "FNumber"]
 
             df.loc[df[df["FHightechDept"] == deptName].index.tolist(), "FWorkCenterNumber"] = deptNumber
 
@@ -360,14 +355,13 @@ def workcenter_repalce(df, workcenterdf,deptOldName):
             oldDeptName = df.loc[i]["FOldDept"]
 
             if workcenterdf[workcenterdf["FDept"] == deptName_repalce(deptOldName, oldDeptName)].empty != True:
-
-                deptNumber = (workcenterdf[workcenterdf["FDept"] == deptName_repalce(deptOldName, oldDeptName)]).iloc[0]["FNumber"]
+                deptNumber = \
+                    (workcenterdf[workcenterdf["FDept"] == deptName_repalce(deptOldName, oldDeptName)]).iloc[0][
+                        "FNumber"]
 
                 df.loc[df[df["FHightechDept"] == deptName].index.tolist(), "FWorkCenterNumber"] = deptNumber
 
                 df.loc[df[df["FHightechDept"] == deptName].index.tolist(), "FWorkCenterName"] = oldDeptName
-
-
 
     return df
 
@@ -386,8 +380,7 @@ def rditem_repalce(df, projectdf):
 
             reProjectNumbercode = "-".join(projectNumbercode.split("_"))
 
-            if projectdf[projectdf["FRDProjectManual"] == reProjectNumbercode].empty!=True:
-
+            if projectdf[projectdf["FRDProjectManual"] == reProjectNumbercode].empty != True:
                 projectNumber = (projectdf[projectdf["FRDProjectManual"] == reProjectNumbercode]).iloc[0]["FRDProject"]
 
                 df.loc[df[df["FRdProject"] == projectNumbercode].index.tolist(), "FProjectNumber"] = projectNumber
@@ -402,7 +395,7 @@ def lowgradeFunction(data, columns, fSeq, rename, borrowLoanSql):
 
     res["FSeq"] = fSeq
 
-    res.rename(columns={borrowLoanSql.strip(): rename,"FNumber":"FBillNO"}, inplace=True)
+    res.rename(columns={borrowLoanSql.strip(): rename, "FNumber": "FBillNO"}, inplace=True)
 
     return res
 
@@ -418,21 +411,23 @@ def noFirstAcctData_deal(df, borrowLoanSql):
     # "FSeqNew"
 
     res = df.groupby(
-        ["FNumber", "FExpenseOrgID", "FTaxDeclarationOrg", "FHightechDept", "FYear", "FMonth","FDate","FOldDept"])[
+        ["FNumber", "FExpenseOrgID", "FTaxDeclarationOrg", "FHightechDept", "FYear", "FMonth", "FDate", "FOldDept","FNotePeriod"])[
         borrowLoanSql.strip()].sum().to_frame()
 
     res = res.reset_index()
 
-    res.columns = ["FNumber", "FExpenseOrgID", "FTaxDeclarationOrg", "FHightechDept", "FYear", "FMonth","FDate","FOldDept",
+    res.columns = ["FNumber", "FExpenseOrgID", "FTaxDeclarationOrg", "FHightechDept", "FYear", "FMonth", "FDate",
+                   "FOldDept","FNotePeriod",
                    borrowLoanSql.strip()]
 
     res[borrowLoanSql.strip()] = res[borrowLoanSql.strip()].astype(float)
 
-    res[borrowLoanSql.strip()]=res[borrowLoanSql.strip()].round(2)
+    res[borrowLoanSql.strip()] = res[borrowLoanSql.strip()].round(2)
 
     return res
 
-def noFirstAcctDataDefualt_deal(df, borrowLoanSql,BorrowLoan,defultvalue,FNumberTpl,fSeq,rename):
+
+def noFirstAcctDataDefualt_deal(df, borrowLoanSql, BorrowLoan, defultvalue, FNumberTpl, fSeq, rename):
     '''
     不是一级科目数据处理
     :param df:
@@ -459,13 +454,13 @@ def noFirstAcctDataDefualt_deal(df, borrowLoanSql,BorrowLoan,defultvalue,FNumber
     # "FSeqNew"
 
     res = df.groupby(
-        ["FNumber", "FExpenseOrgID", "FTaxDeclarationOrg", "FHightechDept", "FYear", "FMonth", "FDate", "FOldDept"])[
+        ["FNumber", "FExpenseOrgID", "FTaxDeclarationOrg", "FHightechDept", "FYear", "FMonth", "FDate", "FOldDept","FNotePeriod"])[
         "FComPensionBenefitsAmt"].sum().to_frame()
 
     res = res.reset_index()
 
     res.columns = ["FNumber", "FExpenseOrgID", "FTaxDeclarationOrg", "FHightechDept", "FYear", "FMonth", "FDate",
-                   "FOldDept",
+                   "FOldDept","FNotePeriod",
                    "FComPensionBenefitsAmt"]
 
     res.drop(['FComPensionBenefitsAmt'], axis=1, inplace=True)
@@ -473,14 +468,12 @@ def noFirstAcctDataDefualt_deal(df, borrowLoanSql,BorrowLoan,defultvalue,FNumber
     d = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))]["FDefaultAmt"]
 
     if BorrowLoan != "":
-
-        res[rename] = round(abs(float(d)),2)
+        res[rename] = round(abs(float(d)), 2)
 
     return res
 
 
-
-def totalAmount_deal(df, fSeq, BorrowLoan, rename,defultvalue,FNumberTpl):
+def totalAmount_deal(df, fSeq, BorrowLoan, rename, defultvalue, FNumberTpl):
     '''
     总额处理
     :param df:
@@ -496,30 +489,28 @@ def totalAmount_deal(df, fSeq, BorrowLoan, rename,defultvalue,FNumberTpl):
         "FYear": df.loc[0]["FYear"],
         "FMonth": df.loc[0]["FMonth"],
         "FDate": df.loc[0]["FDate"],
-        "FOldDept":df.loc[0]["FOldDept"],
+        "FOldDept": df.loc[0]["FOldDept"],
+        "FNotePeriod":df.loc[0]["FNotePeriod"],
         # "FSeqNew":df.loc[0]["FSeqNew"],
-        "FSeq":fSeq,
-        rename:""
+        "FSeq": fSeq,
+        rename: ""
         # rename:abs(df[BorrowLoan.strip()].astype(np.float64).sum())
     }]
 
     res = pd.DataFrame(list)
 
-    if BorrowLoan.strip()!='FDefaultAmt':
+    if BorrowLoan.strip() != 'FDefaultAmt':
+        res[rename] = round(abs(df[BorrowLoan.strip()].astype(np.float64).sum()), 2)
 
-        res[rename] = round(abs(df[BorrowLoan.strip()].astype(np.float64).sum()),2)
-
-    if BorrowLoan.strip()=='FDefaultAmt':
-
+    if BorrowLoan.strip() == 'FDefaultAmt':
         d = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))]["FDefaultAmt"]
 
-        res[rename] = round(abs(float(d)),2)
+        res[rename] = round(abs(float(d)), 2)
 
     return res
 
 
-
-def bankAmount_deal(df, fSeq, BorrowLoan, rename,defultvalue,FNumberTpl,row):
+def bankAmount_deal(df, fSeq, BorrowLoan, rename, defultvalue, FNumberTpl, row):
     '''
     银行账号
     :param df:
@@ -527,7 +518,7 @@ def bankAmount_deal(df, fSeq, BorrowLoan, rename,defultvalue,FNumberTpl,row):
     :return:
     '''
 
-    FBankAccount=field_split(row["FObtainSource"],"/")
+    FBankAccount = field_split(row["FObtainSource"], "/")
 
     list = [{
         "FBillNO": df.loc[0]["FNumber"],
@@ -538,26 +529,26 @@ def bankAmount_deal(df, fSeq, BorrowLoan, rename,defultvalue,FNumberTpl,row):
         "FMonth": df.loc[0]["FMonth"],
         "FDate": df.loc[0]["FDate"],
         "FOldDept": df.loc[0]["FOldDept"],
+        "FNotePeriod": df.loc[0]["FNotePeriod"],
         # "FSeqNew":df.loc[0]["FSeqNew"],
-        "FSeq":fSeq,
-        "FBankAccount":FBankAccount,
-        rename:""
+        "FSeq": fSeq,
+        "FBankAccount": FBankAccount,
+        rename: ""
         # rename:abs(df[BorrowLoan.strip()].astype(np.float64).sum())
     }]
 
     res = pd.DataFrame(list)
 
-    if BorrowLoan.strip()!='FDefaultAmt':
+    if BorrowLoan.strip() != 'FDefaultAmt':
+        res[rename] = round(abs(df[BorrowLoan.strip()].astype(np.float64).sum()), 2)
 
-        res[rename] = round(abs(df[BorrowLoan.strip()].astype(np.float64).sum()),2)
-
-    if BorrowLoan.strip()=='FDefaultAmt':
-
+    if BorrowLoan.strip() == 'FDefaultAmt':
         d = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))]["FDefaultAmt"]
 
-        res[rename] = round(abs(float(d)),2)
+        res[rename] = round(abs(float(d)), 2)
 
     return res
+
 
 def field_split(field, symbol):
     '''
@@ -570,8 +561,8 @@ def field_split(field, symbol):
     res = field.split(symbol)
 
     if res:
-
         return res[-1]
+
 
 def field_splitCount(field, symbol):
     '''
@@ -584,7 +575,6 @@ def field_splitCount(field, symbol):
     res = field.split(symbol)
 
     return res
-
 
 
 def NotesFiscalYear_repalce(df):
@@ -608,17 +598,23 @@ def lbNA(x):
     :return:
     '''
 
-    if x['FCategoryType'].__contains__('发放'):
+    # if x['FCategoryType'].__contains__('发放'):
+    #
+    #     FMonth = int(x["FMonth"]) - 1
+    #
+    #     if int(x["FMonth"]) == 1:
+    #         FMonth = 12
+    #
+    #     return x['FNotes'].replace('{会计期间}', str(FMonth))
+    #
+    # return x['FNotes'].replace('{会计期间}', str(int(x["FMonth"])) if x['FMonth'] != '' else "")
 
-        FMonth=int(x["FMonth"])-1
+    # res[1].split("月")[0]
 
-        if int(x["FMonth"])==1:
+    return x['FNotes'].replace('{摘要期间}', str(int((str(x["FNotePeriod"]).split("年")[1]).split("月")[0])) if x["FNotePeriod"] != '' else "")
 
-            FMonth=12
 
-        return x['FNotes'].replace('{会计期间}', str(FMonth))
 
-    return x['FNotes'].replace('{会计期间}', str(int(x["FMonth"])) if x['FMonth'] != '' else "")
 
 def lbNY(x):
     '''
@@ -627,17 +623,20 @@ def lbNY(x):
     :return:
     '''
 
-    if x['FCategoryType'].__contains__('发放'):
+    # if x['FCategoryType'].__contains__('发放'):
+    #
+    #     FYear = int(x["FYear"])
+    #
+    #     if int(x["FMonth"]) == 1:
+    #         FYear = int(x["FYear"]) - 1
+    #
+    #     return x['FNotes'].replace('{会计年度}', str(FYear))
+    #
+    # return x['FNotes'].replace('{会计年度}', str(int(x["FYear"])) if x['FYear'] != '' else "")
 
-        FYear=int(x["FYear"])
 
-        if int(x["FMonth"])==1:
+    return x['FNotes'].replace('{会计年度}', str(int(str(x["FNotePeriod"]).split("年")[0])) if x["FNotePeriod"] != '' else "")
 
-            FYear=int(x["FYear"])-1
-
-        return x['FNotes'].replace('{会计年度}', str(FYear))
-
-    return x['FNotes'].replace('{会计年度}', str(int(x["FYear"])) if x['FYear'] != '' else "")
 
 def lbDept(x):
     '''
@@ -646,8 +645,7 @@ def lbDept(x):
     :return:
     '''
 
-    return x['FNotes'].replace('{部门}', str(x["FDeptName"]) if str(x["FDeptName"])!="" else str(x["FHightechDept"]))
-
+    return x['FNotes'].replace('{部门}', str(x["FDeptName"]) if str(x["FDeptName"]) != "" else str(x["FHightechDept"]))
 
 
 def NotesAccountingPeriod_repalce(df):
@@ -671,7 +669,7 @@ def NotesDept_repalce(df):
     :return:
     '''
 
-    df=df.fillna("")
+    df = df.fillna("")
 
     res = df.apply(lbDept, axis=1)
 
@@ -687,11 +685,11 @@ def defult_query(app):
     :return:
     '''
 
-    sql="select * from rds_hrv_ods_tpl_defaultValue"
+    sql = "select * from rds_hrv_ods_tpl_defaultValue"
 
-    res=app.select(sql)
+    res = app.select(sql)
 
-    df=pd.DataFrame(res)
+    df = pd.DataFrame(res)
 
     return df
 
@@ -709,15 +707,14 @@ def totalValue_deal(df, fsql):
 
     if len(add) > 1:
 
-        df[fsql]=0
+        df[fsql] = 0
 
         df[fsql] = df[fsql].astype(float)
 
         for i in add:
             df[i] = df[i].astype(float)
 
-            df[fsql]=abs(df[fsql].round(2)+df[i].round(2))
-
+            df[fsql] = abs(df[fsql].round(2) + df[i].round(2))
 
     if len(subtract) > 1:
 
@@ -726,17 +723,14 @@ def totalValue_deal(df, fsql):
         df[fsql] = df[fsql].astype(float)
 
         for i in subtract:
-
             df[i] = df[i].astype(float)
 
             df[fsql] = abs(df[fsql].round(2) - df[i].round(2))
 
-
     return df
 
 
-
-def fixedValue_deal(df,fSeq,BorrowLoan,rename,defultvalue,FNumberTpl):
+def fixedValue_deal(df, fSeq, BorrowLoan, rename, defultvalue, FNumberTpl):
     '''
     管理费用固定值处理
     :param df:
@@ -755,6 +749,7 @@ def fixedValue_deal(df,fSeq,BorrowLoan,rename,defultvalue,FNumberTpl):
         "FMonth": df.loc[0]["FMonth"],
         "FDate": df.loc[0]["FDate"],
         "FOldDept": df.loc[0]["FOldDept"],
+        "FNotePeriod": df.loc[0]["FNotePeriod"],
         # "FSeqNew":df.loc[0]["FSeqNew"],
         "FSeq": fSeq,
         rename: ""
@@ -762,17 +757,15 @@ def fixedValue_deal(df,fSeq,BorrowLoan,rename,defultvalue,FNumberTpl):
 
     res = pd.DataFrame(list)
 
-
-    d=defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))]["FDefaultAmt"]
+    d = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))]["FDefaultAmt"]
 
     if BorrowLoan != "":
-
-        res[rename] = round(abs(float(d)),2)
+        res[rename] = round(abs(float(d)), 2)
 
     return res
 
 
-def dealingUnit_deal(df,fSeq,BorrowLoan,rename,defultvalue,FNumberTpl):
+def dealingUnit_deal(df, fSeq, BorrowLoan, rename, defultvalue, FNumberTpl):
     '''
     往来单位处理
     :param df:
@@ -793,6 +786,7 @@ def dealingUnit_deal(df,fSeq,BorrowLoan,rename,defultvalue,FNumberTpl):
         "FMonth": df.loc[0]["FMonth"],
         "FDate": df.loc[0]["FDate"],
         "FOldDept": df.loc[0]["FOldDept"],
+        "FNotePeriod": df.loc[0]["FNotePeriod"],
         # "FSeqNew":df.loc[0]["FSeqNew"],
         "FSeq": fSeq,
         rename: "",
@@ -802,23 +796,22 @@ def dealingUnit_deal(df,fSeq,BorrowLoan,rename,defultvalue,FNumberTpl):
 
     res = pd.DataFrame(list)
 
-    FNumber = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))]["FDefaultNumber"].tolist()
+    FNumber = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))][
+        "FDefaultNumber"].tolist()
 
-    FName = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))]["FDefaultName"].tolist()
+    FName = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))][
+        "FDefaultName"].tolist()
 
-
-    res["FDealingUnitNumber"] =FNumber
+    res["FDealingUnitNumber"] = FNumber
     res["FDealingUnitName"] = FName
 
-    if BorrowLoan.strip()!='FDefaultAmt':
+    if BorrowLoan.strip() != 'FDefaultAmt':
+        res[rename] = round(abs(df[BorrowLoan.strip()].astype(np.float64).sum()), 2)
 
-        res[rename] = round(abs(df[BorrowLoan.strip()].astype(np.float64).sum()),2)
-
-    if BorrowLoan.strip()=='FDefaultAmt':
-
+    if BorrowLoan.strip() == 'FDefaultAmt':
         d = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))]["FDefaultAmt"]
 
-        res[rename] = round(abs(float(d)),2)
+        res[rename] = round(abs(float(d)), 2)
 
     return res
 
@@ -844,6 +837,7 @@ def supplier_deal(df, fSeq, BorrowLoan, rename, defultvalue, FNumberTpl):
         "FMonth": df.loc[0]["FMonth"],
         "FDate": df.loc[0]["FDate"],
         "FOldDept": df.loc[0]["FOldDept"],
+        "FNotePeriod": df.loc[0]["FNotePeriod"],
         # "FSeqNew":df.loc[0]["FSeqNew"],
         "FSeq": fSeq,
         rename: "",
@@ -853,29 +847,29 @@ def supplier_deal(df, fSeq, BorrowLoan, rename, defultvalue, FNumberTpl):
 
     res = pd.DataFrame(list)
 
-    FNumber = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))]["FDefaultNumber"].tolist()
+    FNumber = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))][
+        "FDefaultNumber"].tolist()
 
-    FName = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))]["FDefaultName"].tolist()
+    FName = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))][
+        "FDefaultName"].tolist()
 
     res["FSupplierNumber"] = FNumber
     res["FSupplierName"] = FName
 
-    if BorrowLoan.strip()!='FDefaultAmt':
+    if BorrowLoan.strip() != 'FDefaultAmt':
+        res[rename] = round(abs(df[BorrowLoan.strip()].astype(np.float64).sum()), 2)
 
-        res[rename] = round(abs(df[BorrowLoan.strip()].astype(np.float64).sum()),2)
-
-    if BorrowLoan.strip()=='FDefaultAmt':
-
+    if BorrowLoan.strip() == 'FDefaultAmt':
         d = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))]["FDefaultAmt"]
 
-        res[rename] = round(abs(float(d)),2)
+        res[rename] = round(abs(float(d)), 2)
 
     return res
 
 
-
 def subfunction(df, acct, fSql, fSeq, fDept, FFirstAcct, fAccountNumber, FWorkCenter, FRclass, FRDItem,
-                deptdf, acctreclassdf, workcenterdf, rditemdf, acctdf, projectdf, voucherTpldf, rename,defultvalue,FNumberTpl,deptOldName,Bankaccount,row,dealingUnit,supplier):
+                deptdf, acctreclassdf, workcenterdf, rditemdf, acctdf, projectdf, voucherTpldf, rename, defultvalue,
+                FNumberTpl, deptOldName, Bankaccount, row, dealingUnit, supplier):
     '''
 
     :param df:
@@ -890,18 +884,19 @@ def subfunction(df, acct, fSql, fSeq, fDept, FFirstAcct, fAccountNumber, FWorkCe
     :return:
     '''
 
-    if FFirstAcct == 1 and fAccountNumber != 0 and fDept == 1 and FWorkCenter == 1 and FRclass == 1 and FRDItem == 0 and Bankaccount==0 and dealingUnit==0 and supplier==0:
+    if FFirstAcct == 1 and fAccountNumber != 0 and fDept == 1 and FWorkCenter == 1 and FRclass == 1 and FRDItem == 0 and Bankaccount == 0 and dealingUnit == 0 and supplier == 0:
         # ['部门', '责任中心', '重分类']
 
-        columns = ["FDeptNumber","FDeptName", "FWorkCenterNumber","FWorkCenterName", "FAcctreClassNumber","FAcctreClassName"]
+        columns = ["FDeptNumber", "FDeptName", "FWorkCenterNumber", "FWorkCenterName", "FAcctreClassNumber",
+                   "FAcctreClassName"]
 
         dataAcct = fetchNumber_byFAcct(df, acct, fSql)
 
         res = lowgradeFunction(data=dataAcct, columns=columns, fSeq=fSeq, rename=rename, borrowLoanSql=fSql)
 
-        deptafter = dept_replace(res, deptdf,deptOldName)
+        deptafter = dept_replace(res, deptdf, deptOldName)
 
-        workcenterdf = workcenter_repalce(deptafter, workcenterdf,deptOldName)
+        workcenterdf = workcenter_repalce(deptafter, workcenterdf, deptOldName)
 
         # res = acctreclass_replace(workcenterdf, voucherTpldf, acctreclassdf)
 
@@ -909,23 +904,23 @@ def subfunction(df, acct, fSql, fSeq, fDept, FFirstAcct, fAccountNumber, FWorkCe
 
         return res
 
-    if FFirstAcct == 1 and fAccountNumber != 0 and fDept == 1 and FWorkCenter == 0 and FRclass == 0 and FRDItem == 0 and Bankaccount==0 and dealingUnit==0 and supplier==0:
+    if FFirstAcct == 1 and fAccountNumber != 0 and fDept == 1 and FWorkCenter == 0 and FRclass == 0 and FRDItem == 0 and Bankaccount == 0 and dealingUnit == 0 and supplier == 0:
         # ['部门']
 
-        columns = ["FDeptNumber","FDeptName"]
+        columns = ["FDeptNumber", "FDeptName"]
 
         dataAcct = fetchNumber_byFAcct(df, acct, fSql)
 
         res = lowgradeFunction(data=dataAcct, columns=columns, fSeq=fSeq, rename=rename, borrowLoanSql=fSql)
 
-        res = dept_replace(res, deptdf,deptOldName)
+        res = dept_replace(res, deptdf, deptOldName)
 
         return res
 
-    if FFirstAcct == 1 and fAccountNumber != 0 and fDept == 0 and FWorkCenter == 1 and FRclass == 1 and FRDItem == 1 and Bankaccount==0 and dealingUnit==0 and supplier==0:
+    if FFirstAcct == 1 and fAccountNumber != 0 and fDept == 0 and FWorkCenter == 1 and FRclass == 1 and FRDItem == 1 and Bankaccount == 0 and dealingUnit == 0 and supplier == 0:
         # ['研发项目', '责任中心', '重分类']
 
-        columns = ["FProjectNumber", "FWorkCenterNumber","FWorkCenterName", "FAcctreClassNumber","FAcctreClassName"]
+        columns = ["FProjectNumber", "FWorkCenterNumber", "FWorkCenterName", "FAcctreClassNumber", "FAcctreClassName"]
 
         dataAcct = fetchNumber_byFAcct(df, acct, fSql)
 
@@ -933,7 +928,7 @@ def subfunction(df, acct, fSql, fSeq, fDept, FFirstAcct, fAccountNumber, FWorkCe
 
         rditemafter = rditem_repalce(res, projectdf)
 
-        workcenterdf = workcenter_repalce(rditemafter, workcenterdf,deptOldName)
+        workcenterdf = workcenter_repalce(rditemafter, workcenterdf, deptOldName)
 
         res = acctreclass_replace(workcenterdf, row, acctreclassdf)
 
@@ -941,44 +936,49 @@ def subfunction(df, acct, fSql, fSeq, fDept, FFirstAcct, fAccountNumber, FWorkCe
 
         return res
 
-    if FFirstAcct == 0 and fAccountNumber == 1 and fDept == 1 and FWorkCenter == 0 and FRclass == 0 and FRDItem == 0 and Bankaccount==0 and dealingUnit==0 and supplier==0:
+    if FFirstAcct == 0 and fAccountNumber == 1 and fDept == 1 and FWorkCenter == 0 and FRclass == 0 and FRDItem == 0 and Bankaccount == 0 and dealingUnit == 0 and supplier == 0:
         # 部门 不是一级科目分配
 
-        columns = ["FDeptNumber","FDeptName"]
+        columns = ["FDeptNumber", "FDeptName"]
 
         noFirstAcctData = noFirstAcctData_deal(df=df, borrowLoanSql=fSql)
 
         res = lowgradeFunction(data=noFirstAcctData, columns=columns, fSeq=fSeq, rename=rename, borrowLoanSql=fSql)
 
-        res = dept_replace(res, deptdf,deptOldName)
+        res = dept_replace(res, deptdf, deptOldName)
 
         return res
 
-    if FFirstAcct == 0 and fAccountNumber == 0 and fDept == 0 and FWorkCenter == 0 and FRclass == 0 and FRDItem == 0 and Bankaccount==0 and dealingUnit==0 and supplier==0:
+    if FFirstAcct == 0 and fAccountNumber == 0 and fDept == 0 and FWorkCenter == 0 and FRclass == 0 and FRDItem == 0 and Bankaccount == 0 and dealingUnit == 0 and supplier == 0:
         # 总额
 
-        res = totalAmount_deal(df=df, fSeq=fSeq, BorrowLoan=fSql, rename=rename,defultvalue=defultvalue,FNumberTpl=FNumberTpl)
+        res = totalAmount_deal(df=df, fSeq=fSeq, BorrowLoan=fSql, rename=rename, defultvalue=defultvalue,
+                               FNumberTpl=FNumberTpl)
 
         return res
 
-    if FFirstAcct == 0 and fAccountNumber == 0 and fDept == 0 and FWorkCenter == 0 and FRclass == 0 and FRDItem == 0 and Bankaccount==1 and dealingUnit==0 and supplier==0:
+    if FFirstAcct == 0 and fAccountNumber == 0 and fDept == 0 and FWorkCenter == 0 and FRclass == 0 and FRDItem == 0 and Bankaccount == 1 and dealingUnit == 0 and supplier == 0:
         # 银行账号
 
-        res = bankAmount_deal(df=df, fSeq=fSeq, BorrowLoan=fSql, rename=rename,defultvalue=defultvalue,FNumberTpl=FNumberTpl,row=row)
+        res = bankAmount_deal(df=df, fSeq=fSeq, BorrowLoan=fSql, rename=rename, defultvalue=defultvalue,
+                              FNumberTpl=FNumberTpl, row=row)
 
         return res
 
-    if FFirstAcct == 0 and fAccountNumber == 3 and fSql=="FDefaultAmt" and dealingUnit==0 and supplier==0 and fDept == 1 and FWorkCenter == 1 and FRclass == 1:
+    if FFirstAcct == 0 and fAccountNumber == 3 and fSql == "FDefaultAmt" and dealingUnit == 0 and supplier == 0 and fDept == 1 and FWorkCenter == 1 and FRclass == 1:
         # 服务费
-        columns = ["FDeptNumber","FDeptName", "FWorkCenterNumber","FWorkCenterName", "FAcctreClassNumber","FAcctreClassName"]
+        columns = ["FDeptNumber", "FDeptName", "FWorkCenterNumber", "FWorkCenterName", "FAcctreClassNumber",
+                   "FAcctreClassName"]
 
-        noFirstAcctData = noFirstAcctDataDefualt_deal(df=df, borrowLoanSql=fSql,BorrowLoan=fSql,defultvalue=defultvalue,FNumberTpl=FNumberTpl,fSeq=fSeq,rename=rename)
+        noFirstAcctData = noFirstAcctDataDefualt_deal(df=df, borrowLoanSql=fSql, BorrowLoan=fSql,
+                                                      defultvalue=defultvalue, FNumberTpl=FNumberTpl, fSeq=fSeq,
+                                                      rename=rename)
 
         res = lowgradeFunction(data=noFirstAcctData, columns=columns, fSeq=fSeq, rename=rename, borrowLoanSql=fSql)
 
-        deptafter = dept_replace(res, deptdf,deptOldName)
+        deptafter = dept_replace(res, deptdf, deptOldName)
 
-        workcenterdf = workcenter_repalce(deptafter, workcenterdf,deptOldName)
+        workcenterdf = workcenter_repalce(deptafter, workcenterdf, deptOldName)
 
         # res = acctreclass_replace(workcenterdf, voucherTpldf, acctreclassdf)
 
@@ -988,27 +988,29 @@ def subfunction(df, acct, fSql, fSeq, fDept, FFirstAcct, fAccountNumber, FWorkCe
 
         res = acctreclass_replace(workcenterdf, row, acctreclassdf)
 
-
         # res=fixedValue_deal(df=df, fSeq=fSeq, BorrowLoan=fSql, rename=rename,defultvalue=defultvalue,FNumberTpl=FNumberTpl)
 
         return res
 
-    if FFirstAcct == 0 and fAccountNumber == 0 and fDept == 0 and FWorkCenter == 0 and FRclass == 0 and FRDItem == 0 and Bankaccount==0 and dealingUnit==1 and supplier==0:
+    if FFirstAcct == 0 and fAccountNumber == 0 and fDept == 0 and FWorkCenter == 0 and FRclass == 0 and FRDItem == 0 and Bankaccount == 0 and dealingUnit == 1 and supplier == 0:
         # 往来单位
 
-        res=dealingUnit_deal(df=df, fSeq=fSeq, BorrowLoan=fSql, rename=rename,defultvalue=defultvalue,FNumberTpl=FNumberTpl)
+        res = dealingUnit_deal(df=df, fSeq=fSeq, BorrowLoan=fSql, rename=rename, defultvalue=defultvalue,
+                               FNumberTpl=FNumberTpl)
 
         return res
 
-    if FFirstAcct == 0 and fAccountNumber == 0 and fAccountNumber == 0 and fDept == 0 and FWorkCenter == 0 and FRclass == 0 and FRDItem == 0 and Bankaccount==0 and dealingUnit==0 and supplier==1:
+    if FFirstAcct == 0 and fAccountNumber == 0 and fAccountNumber == 0 and fDept == 0 and FWorkCenter == 0 and FRclass == 0 and FRDItem == 0 and Bankaccount == 0 and dealingUnit == 0 and supplier == 1:
         # 供应商
 
-        res=supplier_deal(df=df, fSeq=fSeq, BorrowLoan=fSql, rename=rename,defultvalue=defultvalue,FNumberTpl=FNumberTpl)
+        res = supplier_deal(df=df, fSeq=fSeq, BorrowLoan=fSql, rename=rename, defultvalue=defultvalue,
+                            FNumberTpl=FNumberTpl)
 
         return res
 
 
-def judgement(row, df, deptdf, acctreclassdf, workcenterdf, rditemdf, acctdf, projectdf, voucherTpldf,defultvalue,deptOldName):
+def judgement(row, df, deptdf, acctreclassdf, workcenterdf, rditemdf, acctdf, projectdf, voucherTpldf, defultvalue,
+              deptOldName):
     fLexitemProperty = row["FLexitemProperty"].split("/")
     fAcct = row["FAccount"]
     fFirstAcct = row["FFirstAcct"]
@@ -1016,19 +1018,16 @@ def judgement(row, df, deptdf, acctreclassdf, workcenterdf, rditemdf, acctdf, pr
     fAccountBorrowSql = row["FAccountBorrowSql"]
     fAccountLoanSql = row["FAccountLoanSql"]
     fSeq = row["FSeq"]
-    FNumberTpl=row["FNumber"]
+    FNumberTpl = row["FNumber"]
     rename = ""
     fSql = ""
 
     # df.rename(columns={"FSeqNew":"FNewSeq"},inplace=True)
 
-
     if fAccountBorrowSql != "":
-
         fSql = field_split(fAccountBorrowSql, ".")
 
-        df=totalValue_deal(df,fSql)
-
+        df = totalValue_deal(df, fSql)
 
         rename = "allamountBorrow"
 
@@ -1045,20 +1044,21 @@ def judgement(row, df, deptdf, acctreclassdf, workcenterdf, rditemdf, acctdf, pr
                       fAccountNumber=fAccountNumber, FWorkCenter=arg.loc[1]["judge"],
                       FRclass=arg.loc[2]["judge"], FRDItem=arg.loc[3]["judge"], deptdf=deptdf,
                       acctreclassdf=acctreclassdf, workcenterdf=workcenterdf, rditemdf=rditemdf, acctdf=acctdf,
-                      projectdf=projectdf, voucherTpldf=voucherTpldf, rename=rename,defultvalue=defultvalue,
-                      FNumberTpl=FNumberTpl,deptOldName=deptOldName,Bankaccount=arg.loc[4]["judge"],row=row,
-                      dealingUnit=arg.loc[5]["judge"],supplier=arg.loc[6]["judge"])
+                      projectdf=projectdf, voucherTpldf=voucherTpldf, rename=rename, defultvalue=defultvalue,
+                      FNumberTpl=FNumberTpl, deptOldName=deptOldName, Bankaccount=arg.loc[4]["judge"], row=row,
+                      dealingUnit=arg.loc[5]["judge"], supplier=arg.loc[6]["judge"])
 
     return res
 
 
-def data_deal(voucherTpldf, datadf, deptdf, acctreclassdf, workcenterdf, rditemdf, acctdf, projectdf,defultvalue,deptOldName):
+def data_deal(voucherTpldf, datadf, deptdf, acctreclassdf, workcenterdf, rditemdf, acctdf, projectdf, defultvalue,
+              deptOldName):
     resultdf = pd.DataFrame()
 
     for i in voucherTpldf.index:
         resultdf = pd.concat([resultdf,
                               judgement(voucherTpldf.iloc[i], datadf, deptdf, acctreclassdf, workcenterdf, rditemdf,
-                                        acctdf, projectdf, voucherTpldf,defultvalue,deptOldName)])
+                                        acctdf, projectdf, voucherTpldf, defultvalue, deptOldName)])
 
     return resultdf
 
@@ -1070,14 +1070,13 @@ def result_deal(df):
     :return:
     '''
 
-    df.drop(['FAccountBorrow','FAccountLoan','FAccountBorrowSql','FAccountLoanSql','FFirstAcct','FAccount','FAccountName','FAccountNumber','FLexitemProperty','FObtainSource',"FOldDept"], axis=1, inplace=True)
+    df.drop(['FAccountBorrow', 'FAccountLoan', 'FAccountBorrowSql', 'FAccountLoanSql', 'FFirstAcct', 'FAccount',
+             'FAccountName', 'FAccountNumber', 'FLexitemProperty', 'FObtainSource', "FOldDept","FNotePeriod"], axis=1, inplace=True)
 
     return df
 
 
-
 def sqlSplicing(df):
-
     df = df.reset_index(drop=True)
 
     df = df.fillna("")
@@ -1090,47 +1089,46 @@ def sqlSplicing(df):
     df["allamountLoan"] = df["allamountLoan"].astype(str)
     df["FDate"] = df["FDate"].astype(str)
 
-    col=",".join(df.columns.tolist())
+    col = ",".join(df.columns.tolist())
 
-    sql = """insert into rds_hrv_src_ds_middleTable_filtration("""+col+""") values"""
+    sql = """insert into rds_hrv_src_ds_middleTable_filtration(""" + col + """) values"""
 
     for i in df.index:
 
-        if i==len(df)-1:
+        if i == len(df) - 1:
 
-            sql=sql+str(tuple(df.iloc[i]))
+            sql = sql + str(tuple(df.iloc[i]))
 
         else:
 
-            sql = sql + str(tuple(df.iloc[i]))+""","""
+            sql = sql + str(tuple(df.iloc[i])) + ""","""
 
     return sql
 
 
-
-def src_clear(app,tablename):
+def src_clear(app, tablename):
     '''
     将SRC表中的数据清空
     :param app:
     :return:
     '''
 
-    sql=f"truncate table {tablename}"
+    sql = f"truncate table {tablename}"
 
     app.update(sql)
 
 
-def errorData_clear(app,FYear,FMonth):
+def errorData_clear(app, FYear, FMonth):
     '''
     将中间表异常数据清理
     :param app:
     :return:
     '''
 
-    FYear=str(FYear)+".0"
-    FMonth =str(FMonth) + ".0"
+    FYear = str(FYear) + ".0"
+    FMonth = str(FMonth) + ".0"
 
-    sql=f"delete from rds_hrv_ods_ds_middleTable where FIsdo=2 and FYear='{FYear}' and FMonth='{FMonth}'"
+    sql = f"delete from rds_hrv_ods_ds_middleTable where FIsdo=2 and FYear='{FYear}' and FMonth='{FMonth}'"
 
     app.update(sql)
 
@@ -1189,7 +1187,6 @@ def errorData_clear(app,FYear,FMonth):
 #     app.update(sql)
 
 
-
 def middleTableSrctoOds(app):
     '''
     中间表SRC-ODS
@@ -1197,7 +1194,7 @@ def middleTableSrctoOds(app):
     :return:
     '''
 
-    sql="""
+    sql = """
     INSERT INTO rds_hrv_ods_ds_middleTable  
                 SELECT 
 				FDate,
@@ -1244,7 +1241,7 @@ def middleTableSrctoOds(app):
     """
     app.update(sql)
 
-    src_clear(app,"rds_hrv_src_ds_middleTable")
+    src_clear(app, "rds_hrv_src_ds_middleTable")
 
 
 def middleTableSrc(app):
@@ -1254,7 +1251,7 @@ def middleTableSrc(app):
     :return:
     '''
 
-    sql="""
+    sql = """
     INSERT INTO rds_hrv_src_ds_middleTable  
                 SELECT 
 				FDate,
@@ -1306,9 +1303,7 @@ def middleTableSrc(app):
     src_clear(app, "rds_hrv_src_ds_middleTable_filtration")
 
 
-
-
-def datatable_into(app,sql):
+def datatable_into(app, sql):
     '''
     将中间表插入数据库
     :param app:
@@ -1319,16 +1314,16 @@ def datatable_into(app,sql):
     app.insert(sql)
 
 
-def erpKey_query(app,FCategory):
+def erpKey_query(app, FCategory):
     '''
     查询erp密钥
     :param FCategory:
     :return:
     '''
 
-    sql=f"select acct_id,user_name,app_id,app_sec,server_url,FToken from rds_erp_key where FCategory='{FCategory}'"
+    sql = f"select acct_id,user_name,app_id,app_sec,server_url,FToken from rds_erp_key where FCategory='{FCategory}'"
 
-    res=app.select(sql)
+    res = app.select(sql)
 
     return res
 
@@ -1340,7 +1335,7 @@ def dept_update(app3):
     :return:
     '''
 
-    sql="""
+    sql = """
     update a set a.FHightechDept=a.FOldDept  
     from rds_hrv_std_ds_salary  a 
     where a.FHightechDept=''
@@ -1354,10 +1349,7 @@ def dept_update(app3):
     app3.update(sql)
 
 
-
-
-def action(FToken,FYear,FMonth,FOpthon):
-
+def action(FToken, FYear, FMonth, FOpthon):
     # time.sleep(70)
 
     appKey = RdClient(FToken)
@@ -1368,12 +1360,12 @@ def action(FToken,FYear,FMonth,FOpthon):
 
     erpkey = erpKey_query(appKey, FOpthon)
 
-    app=RdClient(erpkey[0]['FToken'])
+    app = RdClient(erpkey[0]['FToken'])
 
     dept_update(app)
 
-    src_clear(app,"rds_hrv_src_ds_middleTable")
-    src_clear(app,"rds_hrv_src_ds_middleTable_filtration")
+    src_clear(app, "rds_hrv_src_ds_middleTable")
+    src_clear(app, "rds_hrv_src_ds_middleTable_filtration")
 
     deptdf = dept_query(app)
     acctreclassdf = acctreclass_query(app)
@@ -1381,12 +1373,11 @@ def action(FToken,FYear,FMonth,FOpthon):
     rditemdf = rditem_query(app)
     acctdf = acct_query(app)
     projectdf = project_query(app)
-    defultvalue=defult_query(app)
+    defultvalue = defult_query(app)
 
-    deptOldName=deptOldName_query(app)
+    deptOldName = deptOldName_query(app)
 
-    categoryName=categorySecond_query(app,FYear,FMonth)
-
+    categoryName = categorySecond_query(app, FYear, FMonth)
 
     if erpkey:
 
@@ -1402,20 +1393,20 @@ def action(FToken,FYear,FMonth,FOpthon):
 
                     if ruleVars:
 
-                        voucherRuleRes = voucherRule_query(app, ruleVars[0]["FExpenseOrgID"], ruleVars[0]["FTaxDeclarationOrg"],
+                        voucherRuleRes = voucherRule_query(app, ruleVars[0]["FExpenseOrgID"],
+                                                           ruleVars[0]["FTaxDeclarationOrg"],
                                                            ruleVars[0]["FBankType"], ruleVars[0]["FCategoryType"])
 
                         if voucherRuleRes:
 
                             for i in voucherRuleRes:
-
-
                                 voucherTpldf = voucher_query(app, i["FNumber"])
 
                                 dataSourceDF = datasource_query(app, tableNameRes, values["FNumber"])
 
-                                res = data_deal(voucherTpldf, dataSourceDF, deptdf, acctreclassdf, workcenterdf, rditemdf, acctdf,
-                                                projectdf,defultvalue,deptOldName)
+                                res = data_deal(voucherTpldf, dataSourceDF, deptdf, acctreclassdf, workcenterdf,
+                                                rditemdf, acctdf,
+                                                projectdf, defultvalue, deptOldName)
 
                                 df4 = pd.merge(voucherTpldf, res, how="inner", on="FSeq")
 
@@ -1427,9 +1418,10 @@ def action(FToken,FYear,FMonth,FOpthon):
 
                                 result_deal(result)
 
-                                res = sqlSplicing(result[(result["allamountBorrow"] != 0) & (result["allamountLoan"] != 0)])
+                                res = sqlSplicing(
+                                    result[(result["allamountBorrow"] != 0) & (result["allamountLoan"] != 0)])
 
-                                datatable_into(app,res)
+                                datatable_into(app, res)
 
                                 # DataIntoERP.voucher_save(FToken, erpkey)
 
@@ -1439,12 +1431,11 @@ def action(FToken,FYear,FMonth,FOpthon):
 
                                 # result.to_excel(r''+FPath+"\\"+FNumber+"_"+i["FNumber"]+".xlsx")
 
-                                print(values["FNumber"]+"_"+i["FNumber"]+"生成凭证完成")
+                                print(values["FNumber"] + "_" + i["FNumber"] + "生成凭证完成")
 
                         else:
 
-
-                            print(values["FNumber"]+"没有查到相应的模板编号")
+                            print(values["FNumber"] + "没有查到相应的模板编号")
 
                 else:
 
@@ -1469,11 +1460,7 @@ def action(FToken,FYear,FMonth,FOpthon):
     templateNumber_deal(app, FYear, FMonth)
 
 
-
-
-
-def vch_save(FToken,FYear,FMonth,FOpthon):
-
+def vch_save(FToken, FYear, FMonth, FOpthon):
     '''
     凭证生成
     :param app:
@@ -1484,14 +1471,13 @@ def vch_save(FToken,FYear,FMonth,FOpthon):
 
     erpkey = erpKey_query(appKey, FOpthon)
 
-    DataIntoERP.voucher_save(FToken=FToken, FYear=FYear,FMonth=FMonth,option1=erpkey)
+    DataIntoERP.voucher_save(FToken=FToken, FYear=FYear, FMonth=FMonth, option1=erpkey)
 
     pass
 
 
 def precheckData(app):
-
-    sql="""
+    sql = """
     --核算维度部门的
 
         update a set a.FMessage=a.FMessage+'第'+a.FSeqNew+'行，部门未匹配到，请检查！',a.FIsdo=2 
@@ -1629,10 +1615,9 @@ def precheckData2(app):
 
         result = dfRes[dfRes["allamountBorrow"] != dfRes["allamountLoan"]]["FBillNO"].tolist()
 
-        result=list(set(result))
+        result = list(set(result))
 
         for i in result:
-
             sql = f"update a set a.FIsdo=2 , a.FMessage=a.FMessage+'借贷不平，请检查！' from rds_hrv_src_ds_middleTable a where a.FBillNO='{i}'"
 
             app.update(sql)
@@ -1640,26 +1625,30 @@ def precheckData2(app):
 
 def LineNumber_get(app):
     '''
-    获取std,src行号
+    更新std,src行号,单据编号
     :param app:
     :return:
     '''
 
-    sql="""
+    sql = """
     update a set a.FSrcSeq=b.FSeq,a.FStdSeq=b.FSeqNew 
         from rds_hrv_src_ds_middleTable a
         inner join rds_hrv_linenumber3 b
         on a.FHightechDept=b.FHightechDept and a.FBillNO=b.FNumber
+        
+    update a set a.FBillNO=FBillNO+'-'+FNumber from 
+    rds_hrv_src_ds_middleTable a where FNumber='A20'
     """
     app.update(sql)
 
-def templateNumber_deal(app,FYear,FMonth):
+
+def templateNumber_deal(app, FYear, FMonth):
     '''
     将未匹配到的模板信息插入到预览表中
     :return:
     '''
 
-    sql=f"""
+    sql = f"""
     select FNumber as FBillNO,'2' as FIsdo from 
     (select 
     FCategoryType,FNumber,FYear,FMonth
@@ -1670,15 +1659,15 @@ def templateNumber_deal(app,FYear,FMonth):
     where b.FBillNO is null and (a.FYear='{FYear}' and a.FMonth='{FMonth}')
     """
 
-    res=app.select(sql)
+    res = app.select(sql)
 
-    df=pd.DataFrame(res)
+    df = pd.DataFrame(res)
 
     if not df.empty:
 
-        df["FMessage"]="模板未找到，请核对查询模板条件！"
-        df["FYear"] =str(FYear)+".0"
-        df["FMonth"] = str(FMonth)+".0"
+        df["FMessage"] = "模板未找到，请核对查询模板条件！"
+        df["FYear"] = str(FYear) + ".0"
+        df["FMonth"] = str(FMonth) + ".0"
 
         col = ",".join(df.columns.tolist())
 
@@ -1695,10 +1684,3 @@ def templateNumber_deal(app,FYear,FMonth):
                 sql = sql + str(tuple(df.iloc[i])) + ""","""
 
         app.insert(sql)
-
-
-
-
-
-
-
