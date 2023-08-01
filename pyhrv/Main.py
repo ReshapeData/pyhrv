@@ -443,7 +443,7 @@ def noFirstAcctDataDefualt_deal(df, borrowLoanSql, BorrowLoan, defultvalue, FNum
     #
     # res.columns = ["FNumber", "FExpenseOrgID", "FTaxDeclarationOrg", "FHightechDept", "FYear", "FMonth","FDate","FOldDept","FSeqNew",
     #                borrowLoanSql.strip()]
-
+    #
     # d = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))]["FDefaultAmt"]
     #
     # if BorrowLoan != "":
