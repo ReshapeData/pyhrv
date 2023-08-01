@@ -9,7 +9,7 @@ from setuptools import find_packages
 
 setup(
     name  ='pyhrv',
-    version = '1.2.1',
+    version = '1.2.2',
     install_requires=[
         'requests',
     ],

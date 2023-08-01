@@ -166,9 +166,7 @@ def getClassfyData(app3, code):
     '''
 
 
-    sql = f"""select * from rds_hrv_ods_ds_middleTable where FBillNO='{code['FBillNO']}'"""
-
-    print(sql)
+    sql = f"""select * from rds_hrv_ods_ds_middleTable where FBillNO='{code['FBillNO']}' order by FSeq asc"""
 
     res = app3.select(sql)
 
