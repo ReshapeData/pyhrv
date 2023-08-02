@@ -740,20 +740,33 @@ def fixedValue_deal(df, fSeq, BorrowLoan, rename, defultvalue, FNumberTpl):
     :return:
     '''
 
+    # ["FDeptNumber", "FDeptName", "FWorkCenterNumber", "FWorkCenterName", "FAcctreClassNumber",
+    #                    "FAcctreClassName"]
+
+    FDeptName = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))][
+        "FDefaultDeptName"].iloc[0]
+
     list = [{
         "FBillNO": df.loc[0]["FNumber"],
         "FExpenseOrgID": df.loc[0]["FExpenseOrgID"],
         "FTaxDeclarationOrg": df.loc[0]["FTaxDeclarationOrg"],
-        "FHightechDept": "",
+        "FHightechDept": FDeptName if FNumberTpl=="C003" else df.loc[0]["FHightechDept"],
         "FYear": df.loc[0]["FYear"],
         "FMonth": df.loc[0]["FMonth"],
         "FDate": df.loc[0]["FDate"],
         "FOldDept": df.loc[0]["FOldDept"],
         "FNotePeriod": df.loc[0]["FNotePeriod"],
         # "FSeqNew":df.loc[0]["FSeqNew"],
+        "FDeptNumber":"",
+        "FDeptName":"",
+        "FWorkCenterNumber":"",
+        "FWorkCenterName":"",
+        "FAcctreClassNumber":"",
+        "FAcctreClassName":"",
         "FSeq": fSeq,
         rename: ""
     }]
+
 
     res = pd.DataFrame(list)
 
@@ -967,28 +980,40 @@ def subfunction(df, acct, fSql, fSeq, fDept, FFirstAcct, fAccountNumber, FWorkCe
 
     if FFirstAcct == 0 and fAccountNumber == 3 and fSql == "FDefaultAmt" and dealingUnit == 0 and supplier == 0 and fDept == 1 and FWorkCenter == 1 and FRclass == 1:
         # 服务费
-        columns = ["FDeptNumber", "FDeptName", "FWorkCenterNumber", "FWorkCenterName", "FAcctreClassNumber",
-                   "FAcctreClassName"]
+        # columns = ["FDeptNumber", "FDeptName", "FWorkCenterNumber", "FWorkCenterName", "FAcctreClassNumber",
+        #            "FAcctreClassName"]
 
-        noFirstAcctData = noFirstAcctDataDefualt_deal(df=df, borrowLoanSql=fSql, BorrowLoan=fSql,
-                                                      defultvalue=defultvalue, FNumberTpl=FNumberTpl, fSeq=fSeq,
-                                                      rename=rename)
+        # noFirstAcctData = noFirstAcctDataDefualt_deal(df=df, borrowLoanSql=fSql, BorrowLoan=fSql,
+        #                                               defultvalue=defultvalue, FNumberTpl=FNumberTpl, fSeq=fSeq,
+        #                                               rename=rename)
+        #
+        # res = lowgradeFunction(data=noFirstAcctData, columns=columns, fSeq=fSeq, rename=rename, borrowLoanSql=fSql)
 
-        res = lowgradeFunction(data=noFirstAcctData, columns=columns, fSeq=fSeq, rename=rename, borrowLoanSql=fSql)
+        # deptafter = dept_replace(res, deptdf, deptOldName)
+        #
+        # workcenterdf = workcenter_repalce(deptafter, workcenterdf, deptOldName)
+        #
+        # # res = acctreclass_replace(workcenterdf, voucherTpldf, acctreclassdf)
+        #
+        # # rowdf=pd.DataFrame(row)
+        #
+        # # print(rowdf.iloc[19])
+        #
+        # res = acctreclass_replace(workcenterdf, row, acctreclassdf)
+
+        # FDeptNumber = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))][
+        #     "FDefaultDeptNumber"]
+
+        # FDeptName = defultvalue[(defultvalue["FNumber"] == str(FNumberTpl)) & (defultvalue["FSeq"] == int(fSeq))][
+        #     "FDefaultDeptName"]
+
+        res=fixedValue_deal(df=df, fSeq=fSeq, BorrowLoan=fSql, rename=rename,defultvalue=defultvalue,FNumberTpl=FNumberTpl)
 
         deptafter = dept_replace(res, deptdf, deptOldName)
 
         workcenterdf = workcenter_repalce(deptafter, workcenterdf, deptOldName)
 
-        # res = acctreclass_replace(workcenterdf, voucherTpldf, acctreclassdf)
-
-        # rowdf=pd.DataFrame(row)
-
-        # print(rowdf.iloc[19])
-
         res = acctreclass_replace(workcenterdf, row, acctreclassdf)
-
-        # res=fixedValue_deal(df=df, fSeq=fSeq, BorrowLoan=fSql, rename=rename,defultvalue=defultvalue,FNumberTpl=FNumberTpl)
 
         return res
 
